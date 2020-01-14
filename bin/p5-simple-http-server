@@ -1,0 +1,181 @@
+#!/usr/bin/env perl
+# App::P5SimpleHttpServer - Copyright (C) 2019- Ilya Pavlov
+# This library is free software; you can redistribute it and/or modify
+# it under the same terms as Perl itself.
+
+use strict;
+use warnings;
+
+use FindBin;
+use File::Spec;
+use Getopt::Long;
+use List::Util qw(uniq);
+
+use Plack::Runner;
+use Plack::Builder;
+use Plack::App::Directory;
+
+use lib "$FindBin::RealBin/../lib/";
+use App::P5SimpleHttpServer;
+use Plack::Middleware::App::P5SimpleHttpServer::Index;
+
+
+use constant {
+    PORTS_RANGE => [0, 65535]
+};
+
+
+
+my @index;
+my @pr_args;
+
+{
+    my $help;
+    my $version;
+    my $index;
+    my ($port, $host, $socket, @listen, $access_log);
+
+    GetOptions(
+        'h|help'        => \$help,
+        'v|version'     => \$version,
+        'o|host=s'      => \$host,
+        'p|port=i'      => \$port,
+        'S|socket=s'    => \$socket,
+        'l|listen=s@'   => \@listen,
+        'access-log=s'  => \$access_log,
+        #'D|daemonize'   => \$run_in_background,
+        'index=s'       => \$index
+    )
+    or do { $help = 1 };
+
+    if (defined($help)) {
+        print(q{This is simple HTTP server for local testing. Do not use it in production.
+
+Usage:
+    p5-simple-http-server [OPTIONS] [DIRECTORY]
+
+    -h, --help
+        Shows this help
+
+    -v, --version
+        Shows p5-simple-http-server version
+
+    -o, --host
+        Binds to a TCP interface. Defaults to undef, which lets most server
+        backends bind to the any (*) interface. This option is only valid
+        for servers which support TCP sockets.
+
+    -p, --port
+        Binds to a TCP port. Defaults to 5000. This option is only valid for
+        servers which support TCP sockets.
+
+    -S, --socket
+        Listens on a UNIX domain socket path. Defaults to undef. This option
+        is only valid for servers which support UNIX sockets.
+
+    -l, --listen
+        Listens on one or more addresses, whether "HOST:PORT", ":PORT", or
+        "PATH" (without colons). You may use this option multiple times to
+        listen on multiple addresses, but the server will decide whether it
+        supports multiple interfaces.
+
+    --access-log
+        Specifies the pathname of a file where the access log should be
+        written. By default, in the development environment access logs will
+        go to STDERR.
+
+    --index
+        Like nginx's index directive
+
+Examples:
+    # serve current directory on port 5000 and IP 0.0.0.0
+    p5-simple-http-server
+    
+    # serve current directory on port 5678 and IP 0.0.0.0
+    p5-simple-http-server -p=5678
+    
+    # serve current directory on port 5000 and IP 127.0.0.1
+    p5-simple-http-server --host=127.0.0.1
+    
+    # serve /path/to/directory directory
+    p5-simple-http-server /path/to/directory
+    
+    # serve current directory and "index.html" or "index.htm" be used as an index
+    p5-simple-http-server --index="index.html index.htm"
+});
+        exit(0);
+    }
+
+    if (defined($version)) {
+        print "p5-simple-http-server version is ",
+            $App::P5SimpleHttpServer::VERSION, "\n(",
+            App::P5SimpleHttpServer::get_repo_url(), ")\n";
+        exit(0);
+    }
+
+    if (defined($port) && ($port !~ /^\d+$/ || $port < PORTS_RANGE->[0] || $port > PORTS_RANGE->[1])) {
+        die("Port MUST be an integer >=".PORTS_RANGE->[0]." and <=".PORTS_RANGE->[1]."\n");
+    }
+
+    if (defined($index)) {
+        $index =~ s/ +/ /;
+        @index = split(/ /, $index);
+
+        for(@index) {
+            if ($_ =~ m!/\x00!) {
+                die("Filename can't contains '/' or '\x00' in index flag\n");
+            }
+            elsif($_ =~ m!^\.\.?$!) {
+                die("Filename can't be '.' or '..' in index flag\n");
+            }
+        }
+
+        my @_a = uniq(@index);
+        if (scalar(@_a) != scalar(@index)) {
+            @index = @_a;
+            warn("WARNING: There are duplicate params in index flag.\n");
+        }
+    }
+
+    if (defined($ARGV[0]) && !(-d $ARGV[0])) {
+        die("Can't find '".$ARGV[0]."' directory\n");
+    }
+
+    if (defined($port)) {
+        push(@pr_args, "-p=$port");
+    }
+    if (defined($host)) {
+        push(@pr_args, "-o=$host");
+    }
+    if (defined($socket)) {
+        push(@pr_args, "-S=$socket");
+    }
+    for (@listen) {
+        push(@pr_args, "-l=$_");
+    }
+    if (defined($access_log)) {
+        push(@pr_args, "-access-log=$access_log");
+    }
+}
+
+my $server_directory = File::Spec->rel2abs($ARGV[0]);
+
+
+my $runner = Plack::Runner->new();
+$runner->parse_options(@pr_args);
+
+my $app = Plack::App::Directory->new({root => $server_directory})->to_app();
+
+my $builder = Plack::Builder->new();
+
+if (@index) {
+    $builder->add_middleware(
+        "App::P5SimpleHttpServer::Index",
+        root => $server_directory,
+        index => \@index
+    );
+}
+
+$app = $builder->wrap($app);
+
+$runner->run($app);

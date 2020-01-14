@@ -1,0 +1,7 @@
+name = "App-P5SimpleHttpServer"
+# badges = ["travis"]
+authority="cpan:ILUX"
+
+module_maker="ModuleBuildTiny"
+static_install = "auto"
+
