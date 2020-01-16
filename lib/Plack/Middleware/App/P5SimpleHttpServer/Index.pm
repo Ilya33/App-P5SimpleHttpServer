@@ -13,14 +13,14 @@ use Plack::App::File;
 
 
 sub call {
-    my $self = shift;
-    my $env  = shift;
+    if (ref($_[0]->index) eq 'ARRAY' && @{$_[0]->index}) {
+        my $self = shift;
+        my $env  = shift;
 
-    my $index = $self->index;
-    if (ref($index) eq 'ARRAY' && @$index) {
         my $dir = File::Spec->catdir($self->root, $env->{PATH_INFO});
         if (-d $dir) {
-            for (@$index) {
+
+            for (@{$self->index}) {
                 my $path = File::Spec->catfile($dir, $_);
                 if (-f $path) {
                     $self->{file} ||= Plack::App::File->new({ root => $self->root || '.', encoding => $self->encoding, content_type => $self->content_type });
@@ -29,9 +29,11 @@ sub call {
                 }
             }
         }
+
+        return $self->app->($env);
     }
 
-    return $self->app->($env);
+    return $_[0]->app->($_[1]);
 }
 
 

@@ -10,6 +10,10 @@ p5-simple-http-server - simple HTTP server for local testing
 
     p5-simple-http-server [OPTIONS] [DIRECTORY]
 
+# DESCRIPTION
+
+This is simple HTTP server for local testing. Do not use it in production.
+
 # EXAMPLES
 
     # serve current directory on port 5000 and IP 0.0.0.0
@@ -27,9 +31,10 @@ p5-simple-http-server - simple HTTP server for local testing
     # serve current directory and "index.html" or "index.htm" be used as an index
     p5-simple-http-server --index="index.html index.htm"
 
-# DESCRIPTION
+If you want to serve Linux repository from iso just mount or unpack iso to
+SOME\_DIRECTORY and run:
 
-This is simple HTTP server for local testing. Do not use it in production.
+    p5-simple-http-server -p=5678 SOME_DIRECTORY
 
 # BUGS
 
