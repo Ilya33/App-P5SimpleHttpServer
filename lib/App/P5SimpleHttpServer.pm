@@ -29,7 +29,7 @@ p5-simple-http-server - simple HTTP server for local testing
 
 =head1 INSTALL
 
-    curl -L https://cpanmin.us | perl - --sudo https://github.com/Ilya33/App-P5SimpleHttpServer
+    curl -L https://cpanmin.us | perl - --sudo https://github.com/Ilya33/App-P5SimpleHttpServer.git
 
 =head1 SYNOPSIS
 

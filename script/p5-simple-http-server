@@ -9,7 +9,6 @@ use warnings;
 use FindBin;
 use File::Spec;
 use Getopt::Long;
-use List::Util qw(uniq);
 
 use Plack::Runner;
 use Plack::Builder;
@@ -23,6 +22,13 @@ use Plack::Middleware::App::P5SimpleHttpServer::Index;
 use constant {
     PORTS_RANGE => [0, 65535]
 };
+
+
+
+sub _uniq {
+     my %h = map {$_ => 1} @_;
+     return keys(%h);
+}
 
 
 
@@ -130,7 +136,7 @@ Examples:
             }
         }
 
-        my @_a = uniq(@index);
+        my @_a = _uniq(@index);
         if (scalar(@_a) != scalar(@index)) {
             @index = @_a;
             warn("WARNING: There are duplicate params in index flag.\n");
