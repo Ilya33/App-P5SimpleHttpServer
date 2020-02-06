@@ -70,6 +70,10 @@ L<https://github.com/Ilya33/App-P5SimpleHttpServer>. Patches are always welcome.
 
 Ilya Pavlov E<lt>ilux@cpan.orgE<gt>
 
+Contributors:
+
+Fovik
+
 =head1 COPYRIGHT
 
 Copyright 2019- Ilya Pavlov
