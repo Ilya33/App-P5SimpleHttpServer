@@ -6,7 +6,7 @@ p5-simple-http-server - simple HTTP server for local testing
 
     curl -L https://cpanmin.us | perl - --sudo https://github.com/Ilya33/App-P5SimpleHttpServer.git
 
-or download binary file from https://github.com/Ilya33/App-P5SimpleHttpServer/releases
+or download binary file from [https://github.com/Ilya33/App-P5SimpleHttpServer/releases](https://github.com/Ilya33/App-P5SimpleHttpServer/releases)
 
 # SYNOPSIS
 
