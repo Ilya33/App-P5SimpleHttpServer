@@ -17,6 +17,7 @@ use Plack::App::Directory;
 use lib "$FindBin::RealBin/../lib/";
 use App::P5SimpleHttpServer;
 use Plack::Middleware::App::P5SimpleHttpServer::Index;
+use Plack::Middleware::App::P5SimpleHttpServer::Proxy;
 
 
 use constant {
@@ -32,8 +33,9 @@ sub _uniq {
 
 
 
-my @index;
 my @pr_args;
+my @index;
+my $remote;
 
 {
     my $help;
@@ -42,15 +44,16 @@ my @pr_args;
     my ($port, $host, $socket, @listen, $access_log);
 
     GetOptions(
-        'h|help'        => \$help,
-        'v|version'     => \$version,
-        'o|host=s'      => \$host,
-        'p|port=i'      => \$port,
-        'S|socket=s'    => \$socket,
-        'l|listen=s@'   => \@listen,
-        'access-log=s'  => \$access_log,
-        #'D|daemonize'   => \$run_in_background,
-        'index=s'       => \$index
+        'h|help'            => \$help,
+        'v|version'         => \$version,
+        'o|host=s'          => \$host,
+        'p|port=i'          => \$port,
+        'S|socket=s'        => \$socket,
+        'l|listen=s@'       => \@listen,
+        'access-log=s'      => \$access_log,
+        #'D|daemonize'      => \$run_in_background,
+        'index=s'           => \$index,
+        '404-to-proxy=s'    => \$remote
     )
     or do { $help = 1 };
 
@@ -179,6 +182,14 @@ if (@index) {
         "App::P5SimpleHttpServer::Index",
         root => $server_directory,
         index => \@index
+    );
+}
+
+if ($remote) {
+    $builder->add_middleware(
+        "App::P5SimpleHttpServer::Proxy",
+        root => $server_directory,
+        remote => $remote
     );
 }
 
