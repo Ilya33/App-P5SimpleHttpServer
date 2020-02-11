@@ -35,25 +35,28 @@ sub _uniq {
 
 my @pr_args;
 my @index;
-my $remote;
+my $proxies = [];
 
 {
     my $help;
     my $version;
     my $index;
+    my @lpp;
+    my @tfp;
     my ($port, $host, $socket, @listen, $access_log);
 
     GetOptions(
-        'h|help'            => \$help,
-        'v|version'         => \$version,
-        'o|host=s'          => \$host,
-        'p|port=i'          => \$port,
-        'S|socket=s'        => \$socket,
-        'l|listen=s@'       => \@listen,
-        'access-log=s'      => \$access_log,
-        #'D|daemonize'      => \$run_in_background,
-        'index=s'           => \$index,
-        '404-to-proxy=s'    => \$remote
+        'h|help'                        => \$help,
+        'v|version'                     => \$version,
+        'o|host=s'                      => \$host,
+        'p|port=i'                      => \$port,
+        'S|socket=s'                    => \$socket,
+        'l|listen=s@'                   => \@listen,
+        'access-log=s'                  => \$access_log,
+        #'D|daemonize'                  => \$run_in_background,
+        'index=s'                       => \$index,
+        'lpp|location-proxy-pass=s@'    => \@lpp,
+        'tfp|try-files-proxy=s@'        => \@tfp,
     )
     or do { $help = 1 };
 
@@ -146,6 +149,19 @@ Examples:
         }
     }
 
+
+    for (@tfp) {
+        $_ =~ /^([^=]+)=(.+)$/; # TODO \\\=
+        # TODO validate
+
+        push @$proxies, {
+            location    => $1,
+            remote      => $2,
+            'try-files' => 1
+        };
+    }
+
+
     if (defined($ARGV[0]) && !(-d $ARGV[0])) {
         die("Can't find '".$ARGV[0]."' directory\n");
     }
@@ -185,11 +201,11 @@ if (@index) {
     );
 }
 
-if ($remote) {
+if (@$proxies) {
     $builder->add_middleware(
         "App::P5SimpleHttpServer::Proxy",
         root => $server_directory,
-        remote => $remote
+        proxies => $proxies
     );
 }
 
