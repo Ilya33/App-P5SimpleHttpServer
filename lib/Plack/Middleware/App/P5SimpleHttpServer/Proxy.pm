@@ -21,10 +21,25 @@ sub prepare_app {
         $self->proxies([$self->proxies]);
     }
     elsif (ref($self->proxies) ne 'ARRAY') {
-        croak("error");
+        croak('The "proxies" parameter MUST be ARRAY or HASH.');
     }
 
-    # normalize pathes
+    for my $p (@{$self->proxies}) {
+        for (qw(location remote try-files)) {
+            if (!defined($p->{$_}) or ref($p->{$_}) ne '') {
+                croak('The "proxies" parameter is invalid.');
+            }
+        }
+
+        # TODO qr
+    }
+
+    if (ref($self->root) ne '') {
+        croak('The "root" parameter MUST be string.');
+    }
+    unless (defined($self->root)) {
+        $self->root('.');
+    }
 }
 
 
@@ -33,12 +48,11 @@ sub call {
     my $self = shift;
     my $env  = shift;
 
-    ## todo root in prepare_app?
     unless (-f File::Spec->catfile($self->root, $env->{PATH_INFO})) {
         for (@{$self->proxies}) {
             my $location = $_->{location};
 
-            if ($env->{PATH_INFO} =~ m!^$location(?:/.*)?$!) { # TODO qr
+            if ($env->{PATH_INFO} =~ m!^$location(?:/.*)?$!) {
                 unless (defined($self->{proxy})) {
                     $self->{proxy} = Plack::App::Proxy->new(remote => $_->{remote});
                     $self->{proxy}->prepare_app();

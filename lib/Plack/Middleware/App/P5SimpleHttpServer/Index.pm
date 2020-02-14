@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use File::Spec;
+use Carp qw(croak);
 
 use parent qw(Plack::Middleware);
 
@@ -15,11 +16,18 @@ use Plack::Util::Accessor qw(root index encoding content_type);
 sub prepare_app {
     my $self = shift;
 
-    if (!ref($self->index) && defined($self->index)) {
-        $self->index([$self->index]);
+    if (ref($self->index) eq '') {
+        $self->index( defined($self->index) ?[$self->index] :[] );
     }
     elsif (ref($self->index) ne 'ARRAY') {
-        $self->index([]);
+        croak('The "index" parameter MUST be ARRAY or string.');
+    }
+
+    if (ref($self->root) ne '') {
+        croak('The "root" parameter MUST be string.');
+    }
+    unless (defined($self->root)) {
+        $self->root('.');
     }
 }
 
@@ -35,14 +43,14 @@ sub call {
             my $path = File::Spec->catfile($dir, $_);
 
             if (-f $path) {
-                $self->{file} ||= Plack::App::File->new({
-                    root            => $self->root || '.', ##
+                $self->{_file} ||= Plack::App::File->new({
+                    root            => $self->root,
                     encoding        => $self->encoding,
                     content_type    => $self->content_type
                 });
 
                 local $env->{PATH_INFO} = File::Spec->catfile($env->{PATH_INFO}, $_);
-                return $self->{file}->call($env);
+                return $self->{_file}->call($env);
             }
         }
     }

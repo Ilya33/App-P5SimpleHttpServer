@@ -41,22 +41,29 @@ my $proxies = [];
     my $help;
     my $version;
     my $index;
-    my @lpp;
-    my @tfp;
+    my @locations;
+    my @proxy_pass;
+    my @tf_locations;
+    my @tf_proxy_pass;
+    my %tfpp;
     my ($port, $host, $socket, @listen, $access_log);
 
+    Getopt::Long::Configure ('no_auto_abbrev');
     GetOptions(
-        'h|help'                        => \$help,
-        'v|version'                     => \$version,
-        'o|host=s'                      => \$host,
-        'p|port=i'                      => \$port,
-        'S|socket=s'                    => \$socket,
-        'l|listen=s@'                   => \@listen,
-        'access-log=s'                  => \$access_log,
-        #'D|daemonize'                  => \$run_in_background,
-        'index=s'                       => \$index,
-        'lpp|location-proxy-pass=s@'    => \@lpp,
-        'tfp|try-files-proxy=s@'        => \@tfp,
+        'h|help'            => \$help,
+        'v|version'         => \$version,
+        'o|host=s'          => \$host,
+        'p|port=i'          => \$port,
+        'S|socket=s'        => \$socket,
+        'l|listen=s@'       => \@listen,
+        'access-log=s'      => \$access_log,
+        #'D|daemonize'      => \$run_in_background,
+
+        'index=s'           => \$index,
+        'location=s@'       => \@locations,
+        'proxy-pass=s@'     => \@proxy_pass,
+        'tf-location=s@'    => \@tf_locations,
+        'tf-proxy-pass=s@'  => \@tf_proxy_pass
     )
     or do { $help = 1 };
 
@@ -150,13 +157,29 @@ Examples:
     }
 
 
-    for (@tfp) {
-        $_ =~ /^([^=]+)=(.+)$/; # TODO \\\=
-        # TODO validate
+    my $i;
+    my $l = scalar(@locations);
+    if (scalar(@proxy_pass) != $l) {
+        die("The count of locations MUST be equal to proxy_pass options.\n");
+    }
 
+    for ($i=0; $i<$l; ++$i) {
         push @$proxies, {
-            location    => $1,
-            remote      => $2,
+            location    => $locations[$i],
+            remote      => $proxy_pass[$i],
+            'try-files' => 0
+        };
+    }
+
+    $l = scalar(@tf_locations);
+    if (scalar(@tf_proxy_pass) != $l) {
+        die("The count of tf-locations MUST be equal to tf-proxy_pass options.\n");
+    }
+
+    for ($i=0; $i<$l; ++$i) {
+        push @$proxies, {
+            location    => $tf_locations[$i],
+            remote      => $tf_proxy_pass[$i],
             'try-files' => 1
         };
     }
