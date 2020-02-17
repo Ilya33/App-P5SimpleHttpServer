@@ -31,7 +31,12 @@ sub prepare_app {
             }
         }
 
-        # TODO qr
+        # TODO location~
+        # TODO all locations in named regexp
+        $p->{remote} =~ s!/*$!!;
+        my $_location = $p->{location} = $p->{location}.
+            (substr($p->{location}, -1) ne '/' ?'/' :'');
+        $p->{_qr_location} = qr!^\Q$_location\E!;
     }
 
     if (ref($self->root) ne '') {
@@ -48,22 +53,26 @@ sub call {
     my $self = shift;
     my $env  = shift;
 
-    unless (-f File::Spec->catfile($self->root, $env->{PATH_INFO})) {
-        for (@{$self->proxies}) {
-            my $location = $_->{location};
-
-            if ($env->{PATH_INFO} =~ m!^$location(?:/.*)?$!) {
-                unless (defined($self->{proxy})) {
-                    $self->{proxy} = Plack::App::Proxy->new(remote => $_->{remote});
-                    $self->{proxy}->prepare_app();
-                }
-
-                $env->{'plack.proxy.url'} = $_->{remote}.
-                    (substr($location, -1) ne '/' ?'/' :'').
-                    (substr($env->{PATH_INFO}, 0, 1) eq '/' ?substr($env->{PATH_INFO}, 1) :$env->{PATH_INFO});
-
-                return $self->{proxy}->call($env);
+    for my $p (@{$self->proxies}) {
+        if ($env->{PATH_INFO} =~ $p->{_qr_location}) {
+            if (1 == $p->{'try-files'} &&
+                (-f File::Spec->catfile($self->root, $env->{PATH_INFO})))
+            {
+                next;
             }
+
+            unless (defined($p->{_proxy})) {
+                $p->{_proxy} = Plack::App::Proxy->new(remote => $p->{remote});
+                $p->{_proxy}->prepare_app();
+            }
+
+            $env->{'plack.proxy.url'} = $p->{remote}.$p->{location}.
+                (substr($env->{PATH_INFO}, 0, 1) eq '/'
+                    ?substr($env->{PATH_INFO}, 1)
+                    :$env->{PATH_INFO}
+                );
+
+            return $p->{_proxy}->call($env);
         }
     }
 
