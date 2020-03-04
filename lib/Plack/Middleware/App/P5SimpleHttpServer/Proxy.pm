@@ -52,28 +52,34 @@ sub call {
     my $self = shift;
     my $env  = shift;
 
+    my $proxy = {_location_len => 0};
+
     for my $p (@{$self->proxies}) {
         if ($env->{PATH_INFO} =~ $p->{_qr_location}) {
-            if (1 == $p->{'try-files'} &&
-                (-f File::Spec->catfile($self->root, $env->{PATH_INFO})))
-            {
-                next;
+            if ($p->{_location_len} > $proxy->{_location_len}) {
+                $proxy = $p;
             }
-
-            unless (defined($p->{_proxy})) {
-                $p->{_proxy} = Plack::App::Proxy->new(remote => $p->{remote});
-                $p->{_proxy}->prepare_app();
-            }
-
-            if (0 == $p->{_remote_has_uri}) {
-                $env->{'plack.proxy.url'} = $p->{remote}.$env->{PATH_INFO};
-            }
-            else {
-                $env->{'plack.proxy.url'} = $p->{remote}.substr($env->{PATH_INFO}, $p->{_location_len});
-            }
-
-            return $p->{_proxy}->call($env);
         }
+    }
+
+
+    if (0 != $proxy->{_location_len} &&
+        ( 0 == $proxy->{'try-files'} ||
+        !(-f File::Spec->catfile($self->root, $env->{PATH_INFO})) )
+    ) {
+        unless (defined($proxy->{_proxy})) {
+            $proxy->{_proxy} = Plack::App::Proxy->new(remote => $proxy->{remote});
+            $proxy->{_proxy}->prepare_app();
+        }
+
+        if (0 == $proxy->{_remote_has_uri}) {
+            $env->{'plack.proxy.url'} = $proxy->{remote}.$env->{PATH_INFO};
+        }
+        else {
+            $env->{'plack.proxy.url'} = $proxy->{remote}.substr($env->{PATH_INFO}, $proxy->{_location_len});
+        }
+
+        return $proxy->{_proxy}->call($env);
     }
 
     return $self->app->($env);
