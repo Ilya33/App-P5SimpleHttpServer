@@ -68,61 +68,14 @@ my $proxies = [];
     or do { $help = 1 };
 
     if (defined($help)) {
-        print(q{This is simple HTTP server for local testing. Do not use it in production.
+        require Pod::Usage;
+        Pod::Usage->import('pod2usage');
 
-Usage:
-    p5-simple-http-server [OPTIONS] [DIRECTORY]
-
-    -h, --help
-        Shows this help
-
-    -v, --version
-        Shows p5-simple-http-server version
-
-    -o, --host
-        Binds to a TCP interface. Defaults to undef, which lets most server
-        backends bind to the any (*) interface. This option is only valid
-        for servers which support TCP sockets.
-
-    -p, --port
-        Binds to a TCP port. Defaults to 5000. This option is only valid for
-        servers which support TCP sockets.
-
-    -S, --socket
-        Listens on a UNIX domain socket path. Defaults to undef. This option
-        is only valid for servers which support UNIX sockets.
-
-    -l, --listen
-        Listens on one or more addresses, whether "HOST:PORT", ":PORT", or
-        "PATH" (without colons). You may use this option multiple times to
-        listen on multiple addresses, but the server will decide whether it
-        supports multiple interfaces.
-
-    --access-log
-        Specifies the pathname of a file where the access log should be
-        written. By default, in the development environment access logs will
-        go to STDERR.
-
-    --index
-        Like nginx's index directive
-
-Examples:
-    # serve current directory on port 5000 and IP 0.0.0.0
-    p5-simple-http-server
-    
-    # serve current directory on port 5678 and IP 0.0.0.0
-    p5-simple-http-server -p=5678
-    
-    # serve current directory on port 5000 and IP 127.0.0.1
-    p5-simple-http-server --host=127.0.0.1
-    
-    # serve /path/to/directory directory
-    p5-simple-http-server /path/to/directory
-    
-    # serve current directory and "index.html" or "index.htm" be used as an index
-    p5-simple-http-server --index="index.html index.htm"
-});
-        exit(0);
+        pod2usage({
+            -verbose => 99,
+            -sections => ["SYNOPSIS", "OPTIONS", "EXAMPLES"],
+            -exitval => 0
+        });
     }
 
     if (defined($version)) {
@@ -235,3 +188,131 @@ if (@$proxies) {
 $app = $builder->wrap($app);
 
 $runner->run($app);
+
+
+
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+p5-simple-http-server - simple HTTP server for local testing. Do not use it in
+production.
+
+=head1 INSTALL
+
+    curl -L https://cpanmin.us | perl - --sudo https://github.com/Ilya33/App-P5SimpleHttpServer.git
+
+or download binary file from L<https://github.com/Ilya33/App-P5SimpleHttpServer/releases>
+
+=head1 SYNOPSIS
+
+    p5-simple-http-server [OPTIONS] [DIRECTORY]
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h, --help>
+
+Shows this help
+
+=item B<-v, --version>
+
+Shows p5-simple-http-server version
+
+=item B<-o, --host>
+
+Binds to a TCP interface. Defaults to undef, which lets most server backends
+bind to the any (*) interface. This option is only valid for servers which
+support TCP sockets.
+
+=item B<-p, --port>
+
+Binds to a TCP port. Defaults to 5000. This option is only valid for servers
+which support TCP sockets.
+
+=item B<-S, --socket>
+
+Listens on a UNIX domain socket path. Defaults to undef. This option is only
+valid for servers which support UNIX sockets.
+
+=item B<-l, --listen>
+
+Listens on one or more addresses, whether "HOST:PORT", ":PORT", or "PATH"
+(without colons). You may use this option multiple times to listen on multiple
+addresses, but the server will decide whether it supports multiple interfaces.
+
+=item B<--access-log>
+
+Specifies the pathname of a file where the access log should be written. By
+default, in the development environment access logs will go to STDERR.
+
+=item B<--index>
+
+Like nginx's index directive
+
+=item B<--location>
+
+...
+
+=item B<--proxy-pass>
+
+...
+
+=item B<--tf-location>
+
+...
+
+=item B<--tf-proxy-pass>
+
+...
+
+=back
+
+=head1 EXAMPLES
+
+    # serve current directory on port 5000 and IP 0.0.0.0
+    p5-simple-http-server
+    
+    # serve current directory on port 5678 and IP 0.0.0.0
+    p5-simple-http-server -p=5678
+    
+    # serve current directory on port 5000 and IP 127.0.0.1
+    p5-simple-http-server --host=127.0.0.1
+    
+    # serve /path/to/directory directory
+    p5-simple-http-server /path/to/directory
+    
+    # serve current directory and "index.html" or "index.htm" be used as an index
+    p5-simple-http-server --index="index.html index.htm"
+
+If you want to serve Linux repository from iso just mount or unpack iso to
+SOME_DIRECTORY and run:
+
+    p5-simple-http-server -p=5678 SOME_DIRECTORY
+
+=head1 BUGS
+
+Please report any bugs through the web interface at
+L<https://github.com/Ilya33/App-P5SimpleHttpServer>. Patches are always welcome.
+
+=head1 AUTHOR
+
+Ilya Pavlov E<lt>ilux@cpan.orgE<gt>
+
+Contributors:
+
+Fovik
+
+=head1 COPYRIGHT
+
+Copyright 2019- Ilya Pavlov
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
