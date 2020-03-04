@@ -32,11 +32,10 @@ sub prepare_app {
         }
 
         # TODO location~
-        # TODO all locations in one named regexp
-        $p->{remote} =~ s!/*$!!;
-        my $_location = $p->{location}.
-            (substr($p->{location}, -1) ne '/' ?'/' :'');
-        $p->{_qr_location} = qr!^\Q$_location\E!;
+        # TODO all locations in one named regexp?
+        $p->{_remote_has_uri} = ($p->{remote} =~ m!^\w+://[^/]+/!) ?1 :0;
+        $p->{_qr_location} = qr!^\Q$p->{location}\E!;
+        $p->{_location_len} = length($p->{location});
     }
 
     if (ref($self->root) ne '') {
@@ -66,8 +65,12 @@ sub call {
                 $p->{_proxy}->prepare_app();
             }
 
-            # TODO location /l/ && remote http://a.b/c ?
-            $env->{'plack.proxy.url'} = $p->{remote}.$env->{PATH_INFO};
+            if (0 == $p->{_remote_has_uri}) {
+                $env->{'plack.proxy.url'} = $p->{remote}.$env->{PATH_INFO};
+            }
+            else {
+                $env->{'plack.proxy.url'} = $p->{remote}.substr($env->{PATH_INFO}, $p->{_location_len});
+            }
 
             return $p->{_proxy}->call($env);
         }
