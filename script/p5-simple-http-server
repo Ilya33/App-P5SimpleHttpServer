@@ -41,14 +41,14 @@ my $proxies = [];
     my $help;
     my $version;
     my $index;
-    my @locations;
+    my @locations_pp;
     my @proxy_pass;
-    my @tf_locations;
+    my @tf_locations_pp;
     my @tf_proxy_pass;
     my %tfpp;
     my ($port, $host, $socket, @listen, $access_log);
 
-    Getopt::Long::Configure ('no_auto_abbrev');
+    Getopt::Long::Configure('no_auto_abbrev');
     GetOptions(
         'h|help'            => \$help,
         'v|version'         => \$version,
@@ -60,9 +60,9 @@ my $proxies = [];
         #'D|daemonize'      => \$run_in_background,
 
         'index=s'           => \$index,
-        'location=s@'       => \@locations,
+        'location-pp=s@'    => \@locations_pp,
         'proxy-pass=s@'     => \@proxy_pass,
-        'tf-location=s@'    => \@tf_locations,
+        'tf-location-pp=s@' => \@tf_locations_pp,
         'tf-proxy-pass=s@'  => \@tf_proxy_pass
     )
     or do { $help = 1 };
@@ -111,27 +111,27 @@ my $proxies = [];
 
 
     my $i;
-    my $l = scalar(@locations);
+    my $l = scalar(@locations_pp);
     if (scalar(@proxy_pass) != $l) {
-        die("The count of locations MUST be equal to proxy_pass options.\n");
+        die("The count of locations-pp MUST be equal to proxy_pass options.\n");
     }
 
     for ($i=0; $i<$l; ++$i) {
         push @$proxies, {
-            location    => $locations[$i],
+            location    => $locations_pp[$i],
             remote      => $proxy_pass[$i],
             'try-files' => 0
         };
     }
 
-    $l = scalar(@tf_locations);
+    $l = scalar(@tf_locations_pp);
     if (scalar(@tf_proxy_pass) != $l) {
-        die("The count of tf-locations MUST be equal to tf-proxy_pass options.\n");
+        die("The count of tf-locations-pp MUST be equal to tf-proxy_pass options.\n");
     }
 
     for ($i=0; $i<$l; ++$i) {
         push @$proxies, {
-            location    => $tf_locations[$i],
+            location    => $tf_locations_pp[$i],
             remote      => $tf_proxy_pass[$i],
             'try-files' => 1
         };
@@ -253,7 +253,7 @@ default, in the development environment access logs will go to STDERR.
 
 Like nginx's index directive
 
-=item B<--location>
+=item B<--location-pp>
 
 ...
 
@@ -261,7 +261,7 @@ Like nginx's index directive
 
 ...
 
-=item B<--tf-location>
+=item B<--tf-location-pp>
 
 ...
 

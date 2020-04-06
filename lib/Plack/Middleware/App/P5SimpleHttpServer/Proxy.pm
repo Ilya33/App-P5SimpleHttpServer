@@ -32,7 +32,6 @@ sub prepare_app {
         }
 
         # TODO location~
-        # TODO all locations in one named regexp?
         $p->{_remote_has_uri} = ($p->{remote} =~ m!^\w+://[^/]+/!) ?1 :0;
         $p->{_qr_location} = qr!^\Q$p->{location}\E!;
         $p->{_location_len} = length($p->{location});

@@ -1,5 +1,5 @@
 {
-   "abstract" : "simple HTTP server for local testing",
+   "abstract" : "simple HTTP server for local testing. Do not use it in\nproduction.",
    "author" : [
       "Ilya Pavlov <ilux@cpan.org>"
    ],
@@ -43,6 +43,7 @@
       "runtime" : {
          "requires" : {
             "Plack" : "0",
+            "Plack::App::Proxy" : "0",
             "perl" : "5.008005"
          }
       },
