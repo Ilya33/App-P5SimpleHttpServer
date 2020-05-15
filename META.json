@@ -44,6 +44,7 @@
          "requires" : {
             "Plack" : "0",
             "Plack::App::Proxy" : "0",
+            "Starlight" : "0.0400",
             "perl" : "5.008005"
          }
       },
