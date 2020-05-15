@@ -50,20 +50,24 @@ or download binary file from [https://github.com/Ilya33/App-P5SimpleHttpServer/r
     Specifies the pathname of a file where the access log should be written. By
     default, in the development environment access logs will go to STDERR.
 
+- **-w, --workers**
+
+    Number of worker processes. Default 1.
+
 - **--index**
 
     Like nginx's index directive
 
 # EXAMPLES
 
-    # serve current directory on port 5000 and IP 0.0.0.0
+    # serve current directory on port 5000 and IP 0.0.0.0 with 1 worker
     p5-simple-http-server
     
-    # serve current directory on port 5678 and IP 0.0.0.0
-    p5-simple-http-server -p=5678
+    # serve current directory on port 5678 and IP 0.0.0.0 with 1 worker
+    p5-simple-http-server -p 5678
     
-    # serve current directory on port 5000 and IP 127.0.0.1
-    p5-simple-http-server --host=127.0.0.1
+    # serve current directory on port 5000 and IP 127.0.0.1 with 16 workers
+    p5-simple-http-server --host 127.0.0.1 -w 16
     
     # serve /path/to/directory directory
     p5-simple-http-server /path/to/directory
@@ -74,7 +78,7 @@ or download binary file from [https://github.com/Ilya33/App-P5SimpleHttpServer/r
 If you want to serve Linux repository from iso just mount or unpack iso to
 SOME\_DIRECTORY and run:
 
-    p5-simple-http-server -p=5678 SOME_DIRECTORY
+    p5-simple-http-server -w 8 -p 5678 SOME_DIRECTORY
 
 # BUGS
 
