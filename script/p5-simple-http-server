@@ -47,6 +47,7 @@ my $proxies = [];
     my @tf_proxy_pass;
     my %tfpp;
     my ($port, $host, $socket, @listen, $access_log);
+    my $workers;
 
     Getopt::Long::Configure('no_auto_abbrev');
     GetOptions(
@@ -58,6 +59,8 @@ my $proxies = [];
         'l|listen=s@'       => \@listen,
         'access-log=s'      => \$access_log,
         #'D|daemonize'      => \$run_in_background,
+
+        'w|workers=i'        => \$workers,
 
         'index=s'           => \$index,
         'location-pp=s@'    => \@locations_pp,
@@ -142,6 +145,7 @@ my $proxies = [];
         die("Can't find '".$ARGV[0]."' directory\n");
     }
 
+
     if (defined($port)) {
         push(@pr_args, "-p=$port");
     }
@@ -155,8 +159,13 @@ my $proxies = [];
         push(@pr_args, "-l=$_");
     }
     if (defined($access_log)) {
-        push(@pr_args, "-access-log=$access_log");
+        push(@pr_args, "--access-log=$access_log");
     }
+
+    $workers = 1
+        unless(defined($workers));
+    push(@pr_args, "-s=Starlight");
+    push(@pr_args, "--max-workers=$workers");
 }
 
 my $server_directory = File::Spec->rel2abs($ARGV[0]);
